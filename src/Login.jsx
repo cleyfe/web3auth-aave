@@ -56,7 +56,7 @@ export default function Login() {
 
     return (
         <>
-        <div className="bucket-background"> 
+        <div className="background"> 
             <div className="container">
                 <div className="row justify-content-center">
                     <div className="col ">
