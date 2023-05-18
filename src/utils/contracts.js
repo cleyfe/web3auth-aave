@@ -1,0 +1,15 @@
+  const Pool = "0x794a61358D6845594F94dc1DB02A252b5b4814aD"; 
+  const DAI = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
+  const USDC = "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"; 
+  const WETH = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"; 
+  
+
+  const CONTRACT = {
+    Pool: Pool,
+    DAI: DAI,
+    USDC: USDC,
+    WETH: WETH,
+  };
+  
+
+  export { CONTRACT };

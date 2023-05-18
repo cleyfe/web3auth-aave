@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, Fragment } from "react";
+import { ABI } from "./utils/ABIs";
+import { CONTRACT } from "./utils/contracts";
 import SocialLogin from "@biconomy/web3-auth";
 import "@biconomy/web3-auth/dist/src/style.css"
 import { ChainId } from "@biconomy/core-types";
@@ -9,7 +11,7 @@ import { Column } from 'primereact/column';
 export default function Login() {
     const sdkRef = useRef();
     const [account, setAccount] = useState("")
-
+    const [interval, enableInterval] = useState(false)
     const coinsData = [
         { Asset: 'DAI', APY: '1%' },
         { Asset: 'USDC', APY: '1%' },
@@ -18,9 +20,17 @@ export default function Login() {
 
 
     useEffect(() => {
+        //Initiate Biconomy login at page refresh
         initSocialLogin()
-
     }, []);
+
+    useEffect(() => {
+        //Hide the wallet modal if user is already connected (PS: this solution is not ideal in terms of UX)
+        if(account) {
+            sdkRef.current.hideWallet()
+            return;
+        }
+    }, [account]);
 
 
     const initSocialLogin = async e => {
@@ -28,6 +38,7 @@ export default function Login() {
             // create an instance of SocialLogin 
             const socialLogin = new SocialLogin()
 
+            //Whitelist domain. Only necessary in production, not in local
             const signature1 = await socialLogin.whitelistUrl('https://web3auth-aave.herokuapp.com/')
             await socialLogin.init({
                 chainId: ethers.utils.hexValue(42161), //42161 is ARBITRUM. If Mumbai for example: ethers.utils.hexValue(ChainId.POLYGON_MUMBAI),
@@ -36,6 +47,7 @@ export default function Login() {
                 }
             })
 
+            //Saving the socialLogin instance under sdkRef for future uses
             sdkRef.current = socialLogin
 
         } catch (error) {
@@ -43,8 +55,9 @@ export default function Login() {
           }
     };
 
-    const showWallet = async e => {
 
+    //Show the wallet modal when clicking on button
+    const showWallet = async e => {
         sdkRef.current?.showWallet()
 
         if (!sdkRef.current?.provider) return;
@@ -52,16 +65,8 @@ export default function Login() {
             sdkRef.current?.provider,
         );
         const accounts = await provider.listAccounts();
-        console.log(accounts)
         setAccount(accounts)
     }
-
-    const logout = async e => {
-        sdkRef.current?.logout()
-        console.log("Logged out")
-        setAccount('')
-    }
-    
 
     function web3Login() {
         return(
@@ -77,6 +82,13 @@ export default function Login() {
 
         )
     }
+
+    //Logging out the user when clicking on button
+    const logout = async e => {
+        sdkRef.current?.logout()
+        console.log("Logged out")
+        setAccount('')
+    }    
 
     function web3logout() {
         return (
@@ -94,7 +106,7 @@ export default function Login() {
 
     }
 
-
+    // Config of buttons to deposit/withdraw into Aave protocol (to be finalized with web3.js and relevant contracts)
     const DepositTemplate = (rowData) => {
         let assetRow = rowData.Asset
 
