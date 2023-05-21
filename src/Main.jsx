@@ -20,7 +20,7 @@ export default function Main() {
 
     const chainId_ARBITRUM = 42161
     const heroku_URL = 'https://web3auth-aave.herokuapp.com/'
-    const vercel_URL = 'https://biconomy-social-auth.vercel.app'
+    const vercel_URL = 'https://web3auth-aave.vercel.app/'
 
     const coinsData = [
         { Asset: 'DAI', APY: '1%' },
@@ -122,7 +122,7 @@ export default function Main() {
 
         try {
             const socialLoginSDK = new SocialLogin()
-            const signature1 = await socialLoginSDK.whitelistUrl(heroku_URL)
+            const signature1 = await socialLoginSDK.whitelistUrl(vercel_URL)
             await socialLoginSDK.init(chainId_ARBITRUM, {
             whitelistUrls: {
                 vercel_URL: signature1,
