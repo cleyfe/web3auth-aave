@@ -120,9 +120,7 @@ export default function Main() {
                 <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={connect}>
                     Connect web3auth
                 </button>
-
             </div>
-
         )
     }
 
@@ -152,6 +150,16 @@ export default function Main() {
             </>
         )
 
+    }
+
+    function UserDataButton() {
+        return(
+            <div className="mb-4 mt-4">
+                <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={getUserInfo}>
+                    Show User Info
+                </button>
+            </div>
+        )
     }
 
     /*''''''''''''''''''''''*/
@@ -304,6 +312,19 @@ export default function Main() {
                         {address ? LogoutButton() : "Wallet not connected"}
                     </div>
                 </div>
+                <div className="mb-4 mt-4">
+                    <div className="text-center">
+                        {!userInfo && address ? UserDataButton() : "Connect to see info"}
+                    </div>
+                </div>
+                {userInfo && (
+                    <div style={{ maxWidth: 800, wordBreak: "break-all" }}>
+                        <h2>User Info</h2>
+                        <pre style={{ whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(userInfo, null, 2)}
+                        </pre>
+                    </div>
+                )}
             </section>
 
             <hr />
