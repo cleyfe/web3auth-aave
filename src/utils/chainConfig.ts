@@ -14,20 +14,27 @@ export const supportedChains = [
   ChainId.ARBITRUM,
 ];
 
+const tempKeys = {
+  MAINNET_API_KEY: '',
+  GOERLI_API_KEY: '',
+  MUMBAI_API_KEY: '',
+  POLYGON_API_KEY: '',
+  API_KEY: '',
+}
 export const getRPCProvider = (chainId: number) => {
   switch (chainId) {
     case 1:
-      return "https://eth-mainnet.g.alchemy.com/v2/YMRFBPG1iyBwiRQIHThSWZanZj0NXUjv";
+      return `https://eth-mainnet.g.alchemy.com/v2/${MAINNET_API_KEY}`;
     case 5:
-      return "https://eth-goerli.alchemyapi.io/v2/lmW2og_aq-OXWKYRoRu-X6Yl6wDQYt_2";
+      return `https://eth-goerli.alchemyapi.io/v2/${GOERLI_API_KEY}`;
     case 80001:
-      return "https://polygon-mumbai.g.alchemy.com/v2/Q4WqQVxhEEmBYREX22xfsS2-s5EXWD31";
+      return `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_API_KEY}`;
     case 137:
-      return "https://polygon-mainnet.g.alchemy.com/v2/6Tn--QDkp1vRBXzRV3Cc8fLXayr5Yoij";
+      return `https://polygon-mainnet.g.alchemy.com/v2/${POLYGON_API_KEY}`;
     case 42161:
-      return "https://rpc.ankr.com/arbitrum"
+      return `https://rpc.ankr.com/arbitrum`
     default:
-      return "https://eth-mainnet.g.alchemy.com/v2/YMRFBPG1iyBwiRQIHThSWZanZj0NXUjv";
+      return `https://eth-mainnet.g.alchemy.com/v2/${API_KEY}`;
   }
 };
 
