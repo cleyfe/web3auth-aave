@@ -15,26 +15,26 @@ export const supportedChains = [
 ];
 
 const tempKeys = {
-  MAINNET_API_KEY: '',
-  GOERLI_API_KEY: '',
-  MUMBAI_API_KEY: '',
-  POLYGON_API_KEY: '',
-  API_KEY: '',
+  MAINNET: '',
+  GOERLI: '',
+  MUMBAI: '',
+  POLYGON: '',
+  KEY: '',
 }
 export const getRPCProvider = (chainId: number) => {
   switch (chainId) {
     case 1:
-      return `https://eth-mainnet.g.alchemy.com/v2/${MAINNET_API_KEY}`;
+      return `https://eth-mainnet.g.alchemy.com/v2/${tempKeys.MAINNET}`;
     case 5:
-      return `https://eth-goerli.alchemyapi.io/v2/${GOERLI_API_KEY}`;
+      return `https://eth-goerli.alchemyapi.io/v2/${tempKeys.GOERLI}`;
     case 80001:
-      return `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_API_KEY}`;
+      return `https://polygon-mumbai.g.alchemy.com/v2/${tempKeys.MUMBAI}`;
     case 137:
-      return `https://polygon-mainnet.g.alchemy.com/v2/${POLYGON_API_KEY}`;
+      return `https://polygon-mainnet.g.alchemy.com/v2/${tempKeys.POLYGON}`;
     case 42161:
       return `https://rpc.ankr.com/arbitrum`
     default:
-      return `https://eth-mainnet.g.alchemy.com/v2/${API_KEY}`;
+      return `https://eth-mainnet.g.alchemy.com/v2/${tempKeys.KEY}`;
   }
 };
 
