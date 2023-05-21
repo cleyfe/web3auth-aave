@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, Fragment } from "react";
-import { approve } from "./Components/functions";
+// import { approve } from "./Components/functions";
+import { useSmartAccountContext } from "./contexts/SmartAccountContext";
+import { useWeb3AuthContext } from "./contexts/SocialLoginContext";
 import SocialLogin from "@biconomy/web3-auth";
 import "@biconomy/web3-auth/dist/src/style.css"
 import { ChainId } from "@biconomy/core-types";
@@ -12,9 +14,22 @@ import { CONTRACT } from "./utils/contracts";
 import Web3 from 'web3'
 
 export default function Main() {
-    const sdkRef = useRef();
-    const [account, setAccount] = useState("")
-    const [interval, enableInterval] = useState(false)
+
+    const {
+        address,
+        loading: eoaLoading,
+        userInfo,
+        connect,
+        disconnect,
+        getUserInfo,
+    } = useWeb3AuthContext();
+
+    const {
+        selectedAccount,
+        loading: scwLoading,
+        setSelectedAccount,
+    } = useSmartAccountContext();
+
     const coinsData = [
         { Asset: 'DAI', APY: '1%' },
         { Asset: 'USDC', APY: '1%' },
@@ -22,42 +37,7 @@ export default function Main() {
       ];
     const [web3, setWeb3] = useState(null)
 
-
-
-    useEffect(() => {
-        //Initiate Biconomy login at page refresh
-        initSocialLogin()
-    }, []);
-
-
-    const initSocialLogin = async e => {
-        try {
-            // create an instance of SocialLogin 
-            const socialLogin = new SocialLogin()
-
-            //Whitelist domain. Only necessary in production, not in local. 
-            const signature1 = await socialLogin.whitelistUrl('https://web3auth-aave.herokuapp.com/')
-            await socialLogin.init({
-                //THIS LINE IS CAUSING THE ISSUE WITH GMAIL LOGIN! CAN GMAIL BE USED IF NOT ON ETHEREUM MAINNET?
-                chainId: ethers.utils.hexValue(42161), //42161 is ARBITRUM. If Mumbai for example: ethers.utils.hexValue(ChainId.POLYGON_MUMBAI),
-                whitelistUrls: {
-                    'https://web3auth-aave.herokuapp.com/': signature1,
-                }
-            })
-
-
-
-
-            //Saving the socialLogin instance under sdkRef for future uses
-            sdkRef.current = socialLogin
-
-        } catch (error) {
-            console.log(error, "-----------Error with the the initSocialLogin function------------");
-          }
-    };
-
-
-    const loadWeb3 = async () => {  
+    const loadWeb3 = async () => {
         //Initiate the web3 library
         if (window.ethereum) {
 
@@ -79,7 +59,7 @@ export default function Main() {
             const accounts = (await web3.eth.getAccounts())[0]; //get wallet public address
             setAccount(accounts)
             console.log('Wallet Address: ',account)
-    
+
             const weiWalletBalance = await web3.eth.getBalance(account);
             const ethWalletBalance = web3.utils.fromWei(weiWalletBalance,'ether');
             setNativeWalletBalance(+(ethWalletBalance))
@@ -100,7 +80,7 @@ export default function Main() {
             var USDTBalance = await USDTContract.methods.balanceOf(account).call();
             setUsdtWalletBalance(+(USDTBalance))
             console.log('USDT tokens balance: ',usdtWalletBalance)
-            
+
             //Get DAI balance
             const DaiABI = CONTRACT.DAIABI;
             const DaiAddress = MUMBAICONTRACT.DAITestnet;
@@ -125,7 +105,7 @@ export default function Main() {
             setWethWalletBalance(+(WETHBalance))
             console.log('WETH tokens balance: ',wethWalletBalance)
     successPopup("Wallet balance updated")*/}
-    
+
     }
 
     /*''''''''''''''''''''''''''*/
@@ -134,44 +114,38 @@ export default function Main() {
     function LoginButton() {
         return(
             <div className="mb-4 mt-4">
-                    <p className="text-center"><i> 
+                    <p className="text-center"><i>
                         Login with your wallet provider or create a new wallet using your Gmail.
                     </i></p>
-                <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={showWallet}>
+                <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={connect}>
                     Connect web3auth
                 </button>
 
-            </div>   
+            </div>
 
         )
-    }
-
-    const showWallet = async e => {
-        if(account) return;
-        sdkRef.current?.showWallet();
-        if (!sdkRef.current?.provider) return;
-        const provider = new ethers.providers.Web3Provider(
-            sdkRef.current?.provider,
-        );
-        const accounts = await provider.listAccounts();
-        setAccount(accounts)
-    }
-
-    // Define a callback function to be executed when the user performs an action with the modal
-    function handleModalAction() {
-        console.log('Modal action performed!');
-        sdkRef.current?.hideWallet()
-        loadWeb3()
     }
 
     function LogoutButton() {
         return (
             <>
+                {address && (
+                    <div>
+                        <h2>EOA Address</h2>
+                        <p>{address}</p>
+                    </div>
+                )}
+                {selectedAccount && address && (
+                    <div>
+                        <h2>Smart Account Address</h2>
+                        <p>{selectedAccount.smartAccountAddress}</p>
+                    </div>
+                )}
             <div>
-                {account}
-            </div>
-            <div>
-            <button type="button" id="btn-login" className="btn btn-grey shadow-sm" onClick={logout}>
+            <button type="button" id="btn-login" className="btn btn-grey shadow-sm" onClick={() => {
+                  setSelectedAccount(null);
+                  disconnect();
+                }}>
                     Logout
             </button>
             </div>
@@ -179,13 +153,6 @@ export default function Main() {
         )
 
     }
-
-    const logout = async e => {
-        sdkRef.current?.logout()
-        console.log("Logged out")
-        setAccount('')
-    }    
-
 
     /*''''''''''''''''''''''*/
     /* AAVE V3 approve */
@@ -202,14 +169,14 @@ export default function Main() {
             console.log(web3)
             const weiValue = web3.utils.toWei(depositValue.toString(), 'ether');
             const assetAddress = CONTRACT[token]
-            
+
             //approve tokens
             const contract = new web3.eth.Contract(
                 ABI.ERC20,
                 assetAddress
             );
 
-            const output = await contract.methods.approve(CONTRACT.Pool, weiValue).send({from: account})
+            const output = await contract.methods.approve(CONTRACT.Pool, weiValue).send({from: address})
             .on('transactionHash', function(){
                 loadingPopup("Transaction pending...")
             })
@@ -238,7 +205,7 @@ export default function Main() {
                         Approve DAI
                     </button>
                 )
-            
+
             case "USDC":
                 return (
                     <button type="button" className="btn rounded-pill btn-white shadow-sm" data-toggle="modal" data-target="#depositTableModal" style={{fontSize: "15px" }} >
@@ -252,8 +219,8 @@ export default function Main() {
                         Approve ETH
                     </button>
                 )
-                
-           default: 
+
+           default:
                console.log(assetRow);
         }
     }
@@ -270,7 +237,7 @@ export default function Main() {
                         Deposit DAI
                     </button>
                 )
-            
+
             case "USDC":
                 return (
                     <button type="button" className="btn rounded-pill btn-white shadow-sm" data-toggle="modal" data-target="#depositTableModal" style={{fontSize: "15px" }} >
@@ -284,8 +251,8 @@ export default function Main() {
                         Deposit ETH
                     </button>
                 )
-                
-           default: 
+
+           default:
                console.log(assetRow);
         }
     }
@@ -302,7 +269,7 @@ export default function Main() {
                         Withdraw DAI
                     </button>
                 )
-            
+
             case "USDC":
                 return (
                     <button type="button" className="btn rounded-pill btn-white shadow-sm" data-toggle="modal" data-target="#depositTableModal" style={{fontSize: "15px" }} >
@@ -316,8 +283,8 @@ export default function Main() {
                         Withdraw ETH
                     </button>
                 )
-                
-           default: 
+
+           default:
                console.log(assetRow);
         }
     }
@@ -330,12 +297,12 @@ export default function Main() {
             {/*Login*/}
             <section className="section">
                 <div className="center">
-                    {LoginButton()}                            
+                    {LoginButton()}
                 </div>
                 <div className="mb-4 mt-4">
-                    <p className="text-center">
-                        {account? LogoutButton() : "Wallet not connected"}
-                    </p>
+                    <div className="text-center">
+                        {address ? LogoutButton() : "Wallet not connected"}
+                    </div>
                 </div>
             </section>
 
