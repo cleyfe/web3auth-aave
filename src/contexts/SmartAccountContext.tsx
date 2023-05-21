@@ -10,6 +10,7 @@ export const ChainId = {
   GOERLI: 5,
   POLYGON_MUMBAI: 80001,
   POLYGON_MAINNET: 137,
+  ARBITRUM: 42161,
 };
 
 // Types
@@ -88,11 +89,7 @@ export const SmartAccountProvider = ({ children }: any) => {
         supportedNetworksIds: supportedChains,
         networkConfig: [
           {
-            chainId: ChainId.POLYGON_MUMBAI,
-            dappAPIKey: "59fRCMXvk.8a1652f0-b522-4ea7-b296-98628499aee3",
-          },
-          {
-            chainId: ChainId.POLYGON_MAINNET,
+            chainId: ChainId.ARBITRUM,
             // dappAPIKey: todo
           },
         ],
