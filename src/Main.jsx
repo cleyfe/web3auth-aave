@@ -18,7 +18,7 @@ export default function Main() {
     const sdkRef = useRef(null);
     const [userInfo, setUserInfo] = useState(null)
 
-    const chainId_ARBITRUM = 42161
+    const chainId_ARBITRUM = "0xA4B1" //42161
     const heroku_URL = 'https://web3auth-aave.herokuapp.com/'
     const vercel_URL = 'https://biconomy-social-auth.vercel.app'
 
@@ -106,10 +106,11 @@ export default function Main() {
 
         try {
             const smartAccount = new SmartAccount(web3Provider, {
-                activeNetworkId: chainId_ARBITRUM,
-                supportedNetworkIds: [chainId_ARBITRUM]
+                activeNetworkId: 42161,
+                supportedNetworkIds: [42161]
             });
-            await smartAccount.init();
+            smartAccount.init();
+            console.log(smartAccount)
             setSmartAccount(smartAccount);
             // loadWeb3();
         } catch (err) {
@@ -123,10 +124,14 @@ export default function Main() {
         try {
             const socialLoginSDK = new SocialLogin()
             const signature1 = await socialLoginSDK.whitelistUrl(heroku_URL)
-            await socialLoginSDK.init(chainId_ARBITRUM, {
+            const signature2 = await socialLoginSDK.whitelistUrl(vercel_URL)
+            await socialLoginSDK.init({
+            chainId: chainId_ARBITRUM,
             whitelistUrls: {
-                vercel_URL: signature1,
-            }
+                [heroku_URL]: signature1,
+                [vercel_URL]: signature2,
+            },
+            network: 'cyan'
             })
             sdkRef.current = socialLoginSDK
         } catch (error) {
@@ -135,14 +140,14 @@ export default function Main() {
         }
 
         if (!sdkRef.current.provider) {
-        sdkRef.current.showWallet()
-        enableInterval(true)
+            sdkRef.current.showWallet()
+            enableInterval(true)
         } else {
-        try {
-            initSmartAccount()
-        } catch (error) {
-            console.log(error, "-----------Error initiating smart account------------");
-        }
+            try {
+                initSmartAccount()
+            } catch (error) {
+                console.log(error, "-----------Error initiating smart account------------");
+            }
         }
     }
 
@@ -205,9 +210,10 @@ export default function Main() {
                 <div className="my-10">
                     <div>
                         {`EOA Address: ${smartAccount.owner}`}
+                        {`Smart Account Address: ${smartAccount.account}`}
                     </div>
                     <div>
-                        {`Smart Account Address: ${smartAccount.address}`}
+
                     </div>
                 </div>
                 <div>
