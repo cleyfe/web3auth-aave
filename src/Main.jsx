@@ -24,7 +24,7 @@ export default function Main() {
         ARBITRUM: 42161,
     }
     const heroku_URL = 'https://web3auth-aave.herokuapp.com/'
-    const vercel_URL = 'https://biconomy-social-auth.vercel.app'
+    const vercel_URL = 'https://web3auth-aave-two.vercel.app'
     const rpcTarget = 'https://rpc.ankr.com/arbitrum'
     const network = 'cyan'
 
