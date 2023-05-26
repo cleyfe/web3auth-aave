@@ -137,7 +137,6 @@ export default function Main() {
             },
             network: network,
             rpcTarget: rpcTarget,
-
             })
             sdkRef.current = socialLoginSDK
         } catch (error) {
