@@ -18,9 +18,15 @@ export default function Main() {
     const sdkRef = useRef(null);
     const [userInfo, setUserInfo] = useState(null)
 
-    const chainId_ARBITRUM = "0xA4B1" //42161
+    // const chainId_ARBITRUM = "0xA4B1" //42161 // "0x66EEB"// 421611 // "0xA4B1" //42161
+    const chainIds = {
+        ARBITRUM_hex: '0xA4B1',
+        ARBITRUM: 42161,
+    }
     const heroku_URL = 'https://web3auth-aave.herokuapp.com/'
     const vercel_URL = 'https://biconomy-social-auth.vercel.app'
+    const rpcTarget = 'https://rpc.ankr.com/arbitrum'
+    const network = 'cyan'
 
     const coinsData = [
         { Asset: 'DAI', APY: '1%' },
@@ -97,26 +103,24 @@ export default function Main() {
         successPopup("Wallet balance updated")*/
     }
 
-
     const initSmartAccount = useCallback(async () => {
-        if (!sdkRef?.current.provider) return;
+         if (!sdkRef?.current.provider) return;
 
         sdkRef.current.hideWallet();
         const web3Provider = new ethers.providers.Web3Provider(sdkRef.current.provider);
 
         try {
-            const smartAccount = new SmartAccount(web3Provider, {
-                activeNetworkId: 42161,
-                supportedNetworkIds: [42161]
+            const account = new SmartAccount(web3Provider, {
+                activeNetworkId: chainIds.ARBITRUM,
+                supportedNetworkIds: [chainIds.ARBITRUM]
             });
-            smartAccount.init();
-            console.log(smartAccount)
-            setSmartAccount(smartAccount);
+            await account.init();
+            setSmartAccount(account);
             // loadWeb3();
         } catch (err) {
             console.log('error setting up smart account..', err);
         }
-    }, []);
+    }, [chainIds.ARBITRUM])
 
     async function initSocialLogin() {
         if (!sdkRef.current) {
@@ -126,12 +130,14 @@ export default function Main() {
             const signature1 = await socialLoginSDK.whitelistUrl(heroku_URL)
             const signature2 = await socialLoginSDK.whitelistUrl(vercel_URL)
             await socialLoginSDK.init({
-            chainId: chainId_ARBITRUM,
+            chainId: chainIds.ARBITRUM_hex,
             whitelistUrls: {
                 [heroku_URL]: signature1,
                 [vercel_URL]: signature2,
             },
-            network: 'cyan'
+            network: network,
+            rpcTarget: rpcTarget,
+
             })
             sdkRef.current = socialLoginSDK
         } catch (error) {
@@ -207,34 +213,37 @@ export default function Main() {
     function LogoutButton() {
         return (
             <>
-                <div className="my-10">
-                    <div>
-                        {`EOA Address: ${smartAccount.owner}`}
-                        {`Smart Account Address: ${smartAccount.account}`}
-                    </div>
-                    <div>
-
-                    </div>
-                </div>
-                <div>
-                    <button type="button" id="btn-login" className="btn btn-grey shadow-sm" onClick={logout}>
-                            Logout
-                    </button>
-                    </div>
-                </>
+                {smartAccount && (
+                    <>
+                        <div>
+                            <h2>EOA Address</h2>
+                            <p>{smartAccount.owner}</p>
+                        </div>
+                        <div>
+                            <h2>Smart Account Address</h2>
+                            <p>{smartAccount.address}</p>
+                        </div>
+                    </>
+                )}
+            <div>
+            <button type="button" id="btn-login" className="btn btn-grey shadow-sm" onClick={() => {
+                  logout();
+                }}>
+                    Logout
+            </button>
+            </div>
+            </>
         )
     }
 
-    function UserInfoButton() {
-        if(!userInfo) {
-            return (
-                <div>
-                    <button type="button" id="btn-userInfo" className="btn btn-grey shadow-sm" onClick={getUserInfo}>
-                        Get User Info
-                    </button>
-                </div>
-            )
-        }
+    function UserDataButton() {
+        return(
+            <div className="mb-4 mt-4">
+                <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={getUserInfo}>
+                    Show User Info
+                </button>
+            </div>
+        )
     }
 
     /*''''''''''''''''''''''*/
@@ -378,19 +387,27 @@ export default function Main() {
             {/*Login*/}
             <section className="section">
                 <div className="center">
-                    {!smartAccount ? LoginButton() : 'Your Wallet is Connected'}
+                    {!smartAccount ? LoginButton() : 'Welcome'}
                 </div>
                 <div className="mb-4 mt-4">
                     <div className="text-center">
                         {smartAccount ? LogoutButton() : "Wallet not connected"}
                     </div>
                 </div>
-                <div className="mb-8 mt-8">
+                <div className="mb-4 mt-4">
                     <div className="text-center">
-                        {smartAccount ? UserInfoButton() : "Login to see info"}
-                        {userInfo ? JSON.stringify(userInfo): null}
+                        {!smartAccount ? 'Connect to see info' : null}
+                        {!userInfo && smartAccount ?  UserDataButton() : null}
                     </div>
                 </div>
+                {userInfo && (
+                    <div style={{ wordBreak: "break-all" }}>
+                        <h2>User Info</h2>
+                        <pre style={{ whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(userInfo, null, 2)}
+                        </pre>
+                    </div>
+                )}
             </section>
 
             <hr />
