@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback} from "react";
-import SocialLogin from "@biconomy/web3-auth";
+import SocialLogin from "./utils/SocialLogin";
 import "@biconomy/web3-auth/dist/src/style.css"
 import SmartAccount from "@biconomy/smart-account"
 import { ethers } from "ethers";
@@ -18,7 +18,6 @@ export default function Main() {
     const sdkRef = useRef(null);
     const [userInfo, setUserInfo] = useState(null)
 
-    // const chainId_ARBITRUM = "0xA4B1" //42161 // "0x66EEB"// 421611 // "0xA4B1" //42161
     const chainIds = {
         ARBITRUM_hex: '0xA4B1',
         ARBITRUM: 42161,
@@ -26,7 +25,9 @@ export default function Main() {
     const heroku_URL = 'https://web3auth-aave.herokuapp.com/'
     const vercel_URL = 'https://web3auth-aave-two.vercel.app'
     const rpcTarget = 'https://rpc.ankr.com/arbitrum'
-    const network = 'cyan'
+    const network = 'mainnet'
+    const displayName = 'Artbitrum'
+    const blockExplorer = 'https://arbitscan.io'
 
     const coinsData = [
         { Asset: 'DAI', APY: '1%' },
@@ -108,6 +109,7 @@ export default function Main() {
 
         sdkRef.current.hideWallet();
         const web3Provider = new ethers.providers.Web3Provider(sdkRef.current.provider);
+        console.log('web3Provider: ', web3Provider)
 
         try {
             const account = new SmartAccount(web3Provider, {
@@ -116,6 +118,7 @@ export default function Main() {
             });
             await account.init();
             setSmartAccount(account);
+            console.log('SmartAccoutn: ', account)
             // loadWeb3();
         } catch (err) {
             console.log('error setting up smart account..', err);
@@ -130,13 +133,15 @@ export default function Main() {
             const signature1 = await socialLoginSDK.whitelistUrl(heroku_URL)
             const signature2 = await socialLoginSDK.whitelistUrl(vercel_URL)
             await socialLoginSDK.init({
-            chainId: chainIds.ARBITRUM_hex,
-            whitelistUrls: {
-                [heroku_URL]: signature1,
-                [vercel_URL]: signature2,
-            },
-            network: network,
-            rpcTarget: rpcTarget,
+                chainId: chainIds.ARBITRUM_hex,
+                whitelistUrls: {
+                    [heroku_URL]: signature1,
+                    [vercel_URL]: signature2,
+                },
+                network,
+                rpcTarget,
+                blockExplorer,
+                displayName,
             })
             sdkRef.current = socialLoginSDK
         } catch (error) {
