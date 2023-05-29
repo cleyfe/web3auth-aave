@@ -28,7 +28,6 @@ export default function Main() {
     const network = 'mainnet'
     const displayName = 'Artbitrum'
     const blockExplorer = 'https://arbitscan.io'
-    const vercel_URL = 'https://web3auth-aave.vercel.app/'
 
     const coinsData = [
         { Asset: 'DAI', APY: '1%' },
