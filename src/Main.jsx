@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback} from "react";
-import SocialLogin from "@biconomy/web3-auth";
+import SocialLogin from "./utils/SocialLogin";
 import "@biconomy/web3-auth/dist/src/style.css"
 import SmartAccount from "@biconomy/smart-account"
 import { ethers } from "ethers";
@@ -18,8 +18,16 @@ export default function Main() {
     const sdkRef = useRef(null);
     const [userInfo, setUserInfo] = useState(null)
 
-    const chainId_ARBITRUM = 42161
+    const chainIds = {
+        ARBITRUM_hex: '0xA4B1',
+        ARBITRUM: 42161,
+    }
     const heroku_URL = 'https://web3auth-aave.herokuapp.com/'
+    const vercel_URL = 'https://web3auth-aave.vercel.app'
+    const rpcTarget = 'https://rpc.ankr.com/arbitrum'
+    const network = 'mainnet'
+    const displayName = 'Artbitrum'
+    const blockExplorer = 'https://arbitscan.io'
     const vercel_URL = 'https://web3auth-aave.vercel.app/'
 
     const coinsData = [
@@ -97,36 +105,44 @@ export default function Main() {
         successPopup("Wallet balance updated")*/
     }
 
-
     const initSmartAccount = useCallback(async () => {
-        if (!sdkRef?.current.provider) return;
+         if (!sdkRef?.current.provider) return;
 
         sdkRef.current.hideWallet();
         const web3Provider = new ethers.providers.Web3Provider(sdkRef.current.provider);
+        console.log('web3Provider: ', web3Provider)
 
         try {
-            const smartAccount = new SmartAccount(web3Provider, {
-                activeNetworkId: chainId_ARBITRUM,
-                supportedNetworkIds: [chainId_ARBITRUM]
+            const account = new SmartAccount(web3Provider, {
+                activeNetworkId: chainIds.ARBITRUM,
+                supportedNetworkIds: [chainIds.ARBITRUM]
             });
-            await smartAccount.init();
-            setSmartAccount(smartAccount);
+            await account.init();
+            setSmartAccount(account);
+            console.log('SmartAccoutn: ', account)
             // loadWeb3();
         } catch (err) {
             console.log('error setting up smart account..', err);
         }
-    }, []);
+    }, [chainIds.ARBITRUM])
 
     async function initSocialLogin() {
         if (!sdkRef.current) {
 
         try {
             const socialLoginSDK = new SocialLogin()
-            const signature1 = await socialLoginSDK.whitelistUrl(vercel_URL)
-            await socialLoginSDK.init(chainId_ARBITRUM, {
-            whitelistUrls: {
-                vercel_URL: signature1,
-            }
+            const signature1 = await socialLoginSDK.whitelistUrl(heroku_URL)
+            const signature2 = await socialLoginSDK.whitelistUrl(vercel_URL)
+            await socialLoginSDK.init({
+                chainId: chainIds.ARBITRUM_hex,
+                whitelistUrls: {
+                    [heroku_URL]: signature1,
+                    [vercel_URL]: signature2,
+                },
+                network,
+                rpcTarget,
+                blockExplorer,
+                displayName,
             })
             sdkRef.current = socialLoginSDK
         } catch (error) {
@@ -135,14 +151,14 @@ export default function Main() {
         }
 
         if (!sdkRef.current.provider) {
-        sdkRef.current.showWallet()
-        enableInterval(true)
+            sdkRef.current.showWallet()
+            enableInterval(true)
         } else {
-        try {
-            initSmartAccount()
-        } catch (error) {
-            console.log(error, "-----------Error initiating smart account------------");
-        }
+            try {
+                initSmartAccount()
+            } catch (error) {
+                console.log(error, "-----------Error initiating smart account------------");
+            }
         }
     }
 
@@ -202,33 +218,37 @@ export default function Main() {
     function LogoutButton() {
         return (
             <>
-                <div className="my-10">
-                    <div>
-                        {`EOA Address: ${smartAccount.owner}`}
-                    </div>
-                    <div>
-                        {`Smart Account Address: ${smartAccount.address}`}
-                    </div>
-                </div>
-                <div>
-                    <button type="button" id="btn-login" className="btn btn-grey shadow-sm" onClick={logout}>
-                            Logout
-                    </button>
-                    </div>
-                </>
+                {smartAccount && (
+                    <>
+                        <div>
+                            <h2>EOA Address</h2>
+                            <p>{smartAccount.owner}</p>
+                        </div>
+                        <div>
+                            <h2>Smart Account Address</h2>
+                            <p>{smartAccount.address}</p>
+                        </div>
+                    </>
+                )}
+            <div>
+            <button type="button" id="btn-login" className="btn btn-grey shadow-sm" onClick={() => {
+                  logout();
+                }}>
+                    Logout
+            </button>
+            </div>
+            </>
         )
     }
 
-    function UserInfoButton() {
-        if(!userInfo) {
-            return (
-                <div>
-                    <button type="button" id="btn-userInfo" className="btn btn-grey shadow-sm" onClick={getUserInfo}>
-                        Get User Info
-                    </button>
-                </div>
-            )
-        }
+    function UserDataButton() {
+        return(
+            <div className="mb-4 mt-4">
+                <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={getUserInfo}>
+                    Show User Info
+                </button>
+            </div>
+        )
     }
 
     /*''''''''''''''''''''''*/
@@ -372,19 +392,27 @@ export default function Main() {
             {/*Login*/}
             <section className="section">
                 <div className="center">
-                    {!smartAccount ? LoginButton() : 'Your Wallet is Connected'}
+                    {!smartAccount ? LoginButton() : 'Welcome'}
                 </div>
                 <div className="mb-4 mt-4">
                     <div className="text-center">
                         {smartAccount ? LogoutButton() : "Wallet not connected"}
                     </div>
                 </div>
-                <div className="mb-8 mt-8">
+                <div className="mb-4 mt-4">
                     <div className="text-center">
-                        {smartAccount ? UserInfoButton() : "Login to see info"}
-                        {userInfo ? JSON.stringify(userInfo): null}
+                        {!smartAccount ? 'Connect to see info' : null}
+                        {!userInfo && smartAccount ?  UserDataButton() : null}
                     </div>
                 </div>
+                {userInfo && (
+                    <div style={{ wordBreak: "break-all" }}>
+                        <h2>User Info</h2>
+                        <pre style={{ whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(userInfo, null, 2)}
+                        </pre>
+                    </div>
+                )}
             </section>
 
             <hr />
