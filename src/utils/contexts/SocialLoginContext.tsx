@@ -7,7 +7,6 @@ import SmartAccount from "@biconomy/smart-account"
 
 
 
-
 interface web3AuthContextType {
   connect: () => Promise<SocialLogin | null | undefined>;
   provider: any;
