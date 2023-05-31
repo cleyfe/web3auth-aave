@@ -119,13 +119,7 @@ export const Web3AuthProvider = ({ children }: any) => {
     }
   }, [interval, initSmartAccount])
 
-  // if wallet already connected close widget
-  {/*useEffect(() => {
-    console.log("hide wallet");
-    if (socialLoginSDK && socialLoginSDK.provider) {
-      socialLoginSDK.hideWallet();
-    }
-  }, [address, socialLoginSDK]);*/}
+
 
   async function connect() {
       if (!socialLoginSDK) {
@@ -163,65 +157,7 @@ export const Web3AuthProvider = ({ children }: any) => {
       }
   }
 
-  {/*const connect = useCallback(async () => {
-    //if (address) return;
-    if (socialLoginSDK?.provider) {
-      setLoading(true);
-      //console.info("socialLoginSDK.provider", socialLoginSDK.provider);
-      const web3Provider = new ethers.providers.Web3Provider(
-        socialLoginSDK.provider
-      );
-      const signer = web3Provider.getSigner();
-      const gotAccount = await signer.getAddress();
-      const network = await web3Provider.getNetwork();
-      setWeb3State({
-        provider: socialLoginSDK.provider,
-        web3Provider: web3Provider,
-        ethersProvider: web3Provider,
-        address: gotAccount,
-      });
-      setLoading(false);
-      return;
-    }
-    if (socialLoginSDK) {
-      socialLoginSDK.showWallet();
-      return socialLoginSDK;
-    }
-
-    setLoading(true);
-    const sdk = new SocialLogin();
-    const signature1 = await sdk.whitelistUrl(WEBSITE_URL)
-    await sdk.init({
-      chainId: chainIds.ARBITRUM_hex,
-      whitelistUrls: {
-          [WEBSITE_URL]: signature1,
-        },
-        network,
-        rpcTarget,
-        blockExplorer,
-        displayName,
-    })
-    sdk.showWallet();
-    setSocialLoginSDK(sdk);
-    setLoading(false);
-    return socialLoginSDK;
-  }, [address, socialLoginSDK]);
-
-  // after metamask login -> get provider event
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (address) {
-        clearInterval(interval);
-      }
-      if (socialLoginSDK?.provider && !address) {
-        connect();
-      }
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [address, connect, socialLoginSDK]);*/}
-
+  
   return (
     <Web3AuthContext.Provider
       value={{
