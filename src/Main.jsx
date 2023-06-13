@@ -22,61 +22,51 @@ export default function Main() {
     const navigator = useNavigate();
     const username = localStorage.getItem('username')
     const [loader, setLoader] = useState(false);
-    const [sign, isSign] = useState(false);
     const [user, setUser] = useState({
         username: '',
         password: ''
     })
 
 
-    useEffect(() => {
-        //setAccount("Login")
-        //setFooterAccount("forgotFooter")
-        //if(username){
-        //    navigator(`/debug/`)
-        //    warningPopup("Please try logging out and in again")
-        //}else{
-        //    navigator("/loginBETA")
-        //}
-    }, []);
-
 
     useEffect(() => {
-        if (user.username) {
-            isSign(true)
-        }
-      }, []);
+        console.log(web3Provider, "useeffect...............")
+        const signInIfConnected = async () => {
+            // Check if the user has connected their wallet
+            if (web3Provider) {
 
+                const web3 = new Web3(web3Provider.provider);
 
-    const handleWeb3SignIn = async e => {
-        connect()
-        setTimeout(function(){
-            isSign(true)
-        }, 4000);
-        
-        const web3 = new Web3(web3Provider.provider);
+                const accounts = await web3Provider.listAccounts();
+                const userAddress = accounts[0]
+                const message = "Hello there! Sign this message to authenticate in Buckets"
+                const signature = await create_signature(web3, message, accounts)
 
-        const accounts = await web3Provider.listAccounts();
-        const userAddress = accounts[0]
-        const message = "Hello there! Sign this message to authenticate in Buckets"
-        const signature = await create_signature(web3, message, accounts)
+                setLoader(true)
+                const data = {
+                    userAddress: userAddress,
+                    signature: signature,
+                    message: message
+                }
 
-        setLoader(true)
-        const data = {
-            userAddress: userAddress,
-            signature: signature,
-            message: message
-        }
+                setUser({
+                    username: userAddress,
+                    password: signature
+                });
 
-        setUser({
-            username: userAddress,
-            password: signature
-        });
+                //const response = await fetch(urlllls, { "method": 'POST',.......)
+                //const responseJSON = await response.json()
 
-        //const response = await fetch(URLS.Auth, { "method": 'POST', headers: { "Access-Control-Allow-Origin": '*', "Content-Type": "application/json" }, body: JSON.stringify(data) })
-        //const responseJSON = await response.json()
-        
-    }
+            }
+        };
+
+        signInIfConnected();
+    }, [web3Provider]);
+
+    const handleWeb3SignIn = useCallback(async () => {
+        await connect()
+
+    }, [connect]);
 
     async function create_signature(web3, message, accounts) {
         var hex = ''
@@ -105,52 +95,29 @@ export default function Main() {
         )
     };
     
-    function signDiv() {
-        return (
-            <div className="mb-4 mt-4">
-                <p className="fs-title-2 text-center" align="justify">
-                    Welcome to Buckets, your next-gen wealth management app!
-                </p>
-                <p className="text-center" align="justify">
-                    Sign the message with your wallet to verify ownership.
-                </p>
-                <button type="button" id="btn-login" className="btn btn-orange shadow-sm" onClick={handleWeb3SignIn} >
-                    Sign
-                </button>
-            </div> 
-        )
-    };
-
     return (
         <>
         <div className="bucket-background"> 
-        <div className="container">
-
-<div className="row justify-content-center">
-
-    <div className="col-xl-10 col-lg-12 col-md-9">
-
-        <div className="card o-hidden border-0 shadow-lg my-5">
-            <div className="card-body p-0">
-                {/* <!-- Nested Row within Card Body --> */}
-                <div className="row">
-                    <div className="col-lg-6 d-none d-lg-block bg-password-image"></div>
-                    <div className="col-lg-6">
-                        <div className="p-5">
-                            <div className="text-center">
-                                {sign? signDiv() : loginDiv()}
+            <div className="container">
+                <div className="row justify-content-center">
+                    <div className="col-xl-10 col-lg-12 col-md-9">
+                        <div className="card o-hidden border-0 shadow-lg my-5">
+                            <div className="card-body p-0">
+                                {/* <!-- Nested Row within Card Body --> */}
+                                <div className="row">
+                                    <div className="col-lg-6">
+                                        <div className="p-5">
+                                            <div className="text-center">
+                                                {loginDiv()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-    </div>
-
-</div>
-
-</div>
         </div>
         </>
     )

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ethers } from "ethers";
 import Web3 from 'web3';
 //import SocialLogin from "@biconomy/web3-auth";
@@ -26,7 +26,7 @@ const chainIds = {
 
 const rpcTarget = 'https://rpc.ankr.com/arbitrum'
 const network = 'mainnet'
-const displayName = 'Artbitrum'
+const displayName = 'Arbitrum'
 const blockExplorer = 'https://arbitscan.io'
 
 
@@ -76,17 +76,21 @@ export const Web3AuthProvider = ({ children }: any) => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [smartAccount, setSmartAccount] = useState(null)
   const [interval, enableInterval] = useState(false)
+  const sdkRef = useRef(null);	
 
 
 
   const WEBSITE_URL = 'https://www.buckets.digital/'
 
   const initSmartAccount = useCallback(async () => {
-      if (!socialLoginSDK?.provider) return;
+    if (!sdkRef?.current.provider) return;
 
-    socialLoginSDK.hideWallet();
-    const web3Provider = new ethers.providers.Web3Provider(socialLoginSDK.provider);
-    console.log('web3Provider: ', web3Provider)
+    sdkRef.current.hideWallet();
+    const web3Provider = new ethers.providers.Web3Provider(sdkRef.current.provider);
+    setWeb3State({
+      web3Provider: web3Provider,
+    });
+
 
     try {
         const account = new SmartAccount(web3Provider, {
@@ -95,34 +99,14 @@ export const Web3AuthProvider = ({ children }: any) => {
         });
         await account.init();
         setSmartAccount(account);
-        console.log('SmartAccoutn: ', account)
-        // loadWeb3();
+
     } catch (err) {
         console.log('error setting up smart account..', err);
     }
   }, [chainIds.ARBITRUM])
 
-  useEffect(() => {
-    let loginConfig;
-
-    if (interval) {
-        loginConfig = setInterval(() => {
-            if (!!socialLoginSDK?.provider) {
-                try {
-                    initSmartAccount();
-                    clearInterval(loginConfig)
-                } catch (error) {
-                    console.log(error, "-----------Error initializing smart account------------");
-                }
-            }
-        }, 1000)
-    }
-  }, [interval, initSmartAccount])
-
-
-
   async function connect() {
-      if (!socialLoginSDK) {
+    if (!sdkRef.current) {
 
       try {
           const socialLoginSDK = new SocialLogin()
@@ -138,25 +122,49 @@ export const Web3AuthProvider = ({ children }: any) => {
               blockExplorer,
               displayName,
           })
-          //sdkRef.current = socialLoginSDK
-      } catch (error) {
-          console.log(error, "-----------Error with the connect function------------");
-      }
+          sdkRef.current = socialLoginSDK
+        } catch (error) {
+          console.log(error, "-----------Error with the the initSocialLogin function------------");
+        }
       }
 
-      if (!socialLoginSDK.provider) {
 
-          socialLoginSDK.showWallet()
-          enableInterval(true)
-      } else {
-          try {
-              initSmartAccount()
-          } catch (error) {
-              console.log(error, "-----------Error initiating smart account------------");
-          }
-      }
+      if (!sdkRef.current.provider) {
+        sdkRef.current.showWallet()
+        enableInterval(true)
+    } else {
+        try {
+            initSmartAccount()
+        } catch (error) {
+            console.log(error, "-----------Error initiating smart account------------");
+        }
+    }
   }
 
+  const getUserInfo = useCallback(async () => {
+      if (sdkRef.current) {
+      const userInfo = await sdkRef.current.getUserInfo();
+      setUserInfo(userInfo);
+      }
+  }, [sdkRef]);
+
+
+  useEffect(() => {
+    let loginConfig;
+
+    if (interval) {
+        loginConfig = setInterval(() => {
+            if (!!sdkRef.current?.provider) {
+                try {
+                    initSmartAccount();
+                    clearInterval(loginConfig)
+                } catch (error) {
+                    console.log(error, "-----------Error initializing smart account------------");
+                }
+            }
+        }, 1000)
+    }
+  }, [interval, initSmartAccount])
   
   return (
     <Web3AuthContext.Provider
