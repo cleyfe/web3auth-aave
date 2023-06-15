@@ -80,7 +80,7 @@ export const Web3AuthProvider = ({ children }: any) => {
 
 
 
-  const WEBSITE_URL = 'https://www.buckets.digital/'
+  const WEBSITE_URL = 'https://web3auth-aave-git-login-cleyfe.vercel.app'
 
   const initSmartAccount = useCallback(async () => {
     if (!sdkRef?.current.provider) return;
