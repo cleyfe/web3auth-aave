@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback} from "react";
 import { useNavigate } from 'react-router-dom';
 import { ethers } from "ethers";
+import "@biconomy/web3-auth/dist/src/style.css"
 import {errorPopup, loadingPopup, successPopup, warningPopup} from './utils/PopUpMessage'
 import { ABI } from "./utils/ABIs";
 import { CONTRACT } from "./utils/contracts";
@@ -30,7 +31,6 @@ export default function Main() {
 
 
     useEffect(() => {
-        console.log(web3Provider, "useeffect...............")
         const signInIfConnected = async () => {
             // Check if the user has connected their wallet
             if (web3Provider) {
